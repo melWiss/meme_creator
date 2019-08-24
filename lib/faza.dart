@@ -23,6 +23,7 @@ class SavePage extends StatelessWidget {
   final String memeText, topText, bottomText;
   final Io.File image;
   final TextAlign textAlign;
+  final TextDirection textDirection;
   final FontWeight memeWeight, topmemeWeight, bottommemeWeight;
   final FontStyle memeStyle, topmemeStyle, bottommemeStyle;
   final double memeSize, topmemeSize, bottommemeSize;
@@ -35,6 +36,7 @@ class SavePage extends StatelessWidget {
     this.bottommemeSize,
     this.image,
     this.textAlign,
+    this.textDirection,
     this.memeStyle,
     this.topmemeStyle,
     this.bottommemeStyle,
@@ -51,20 +53,21 @@ class SavePage extends StatelessWidget {
           child: new Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              memeText != "" || memeText != " "
-                  ? Text(
+              memeText != "" && memeText != " "
+                  ? Padding(
+                    padding: EdgeInsets.only(bottom: 10.0),
+                    child: Text(
                       memeText,
                       textAlign: textAlign,
+                      textDirection: textDirection,
                       style: TextStyle(
                           fontSize: memeSize,
                           color: Colors.black,
                           fontWeight: memeWeight,
                           fontStyle: memeStyle),
-                    )
-                  : null,
-              Padding(
-                padding: EdgeInsets.only(bottom: 10.0),
-              ),
+                    ),
+                  )
+                  : Container(),
               image != null
                   ? Padding(
                       padding: EdgeInsets.only(
@@ -83,6 +86,7 @@ class SavePage extends StatelessWidget {
                             child: Text(
                               topText,
                               textAlign: TextAlign.center,
+                              textDirection: textDirection,
                               style: TextStyle(
                                   color: Colors.white,
                                   fontStyle: topmemeStyle,
@@ -114,6 +118,7 @@ class SavePage extends StatelessWidget {
                             child: Text(
                               bottomText,
                               textAlign: TextAlign.center,
+                              textDirection: textDirection,
                               style: TextStyle(
                                   color: Colors.white,
                                   fontStyle: bottommemeStyle,

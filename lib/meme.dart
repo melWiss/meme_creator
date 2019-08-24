@@ -13,6 +13,7 @@ String bottomText = "";
 Io.File _image;
 GlobalKey _globalKey = new GlobalKey();
 TextAlign textAlign = TextAlign.left;
+TextDirection textDirection = TextDirection.ltr;
 FontWeight memeWeight = FontWeight.bold;
 FontWeight topmemeWeight = FontWeight.bold;
 FontWeight bottommemeWeight = FontWeight.bold;
@@ -60,6 +61,7 @@ class TheMemeState extends State<TheMemeClass> {
                 ok,
                 maxLines: null,
                 textAlign: textAlign,
+                textDirection: textDirection,
                 style: TextStyle(
                     fontSize: memeSize,
                     color: Colors.black,
@@ -86,6 +88,7 @@ class TheMemeState extends State<TheMemeClass> {
                       child: Text(
                         topText,
                         textAlign: TextAlign.center,
+                        textDirection: textDirection,
                         style: TextStyle(
                           color: Colors.white,
                           fontStyle: topmemeStyle,
@@ -118,6 +121,7 @@ class TheMemeState extends State<TheMemeClass> {
                       child: Text(
                         bottomText,
                         textAlign: TextAlign.center,
+                        textDirection: textDirection,
                         style: TextStyle(
                           color: Colors.white,
                           fontStyle: bottommemeStyle,
@@ -165,8 +169,8 @@ class TheMemeState extends State<TheMemeClass> {
 }
 
 class MemeCreator extends StatelessWidget {
-  ThemeData theme;
   MemeCreator({this.theme});
+  final ThemeData theme;
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -225,6 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         bottomText: bottomText,
                         image: _image,
                         textAlign: textAlign,
+                        textDirection: textDirection,
                         memeStyle: memeStyle,
                         topmemeStyle: topmemeStyle,
                         bottommemeStyle: bottommemeStyle,
@@ -332,6 +337,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
                       style: TextStyle(color: Colors.white),
+                      textDirection: textDirection,
                       enabled: true,
                       maxLines: null,
                       cursorColor: Colors.white,
@@ -351,6 +357,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
                       style: TextStyle(color: Colors.white),
+                      textDirection: textDirection,
                       enabled: true,
                       maxLines: null,
                       cursorColor: Colors.white,
@@ -371,6 +378,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
                       style: TextStyle(color: Colors.white),
+                      textDirection: textDirection,
                       enabled: true,
                       maxLines: null,
                       cursorColor: Colors.white,
@@ -686,6 +694,49 @@ class _MyHomePageState extends State<MyHomePage> {
                         setState(() {
                           textAlign = x;
                           print(textAlign);
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 10),
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                color: Colors.grey[850],
+                padding: EdgeInsets.all(5),
+                child: Wrap(
+                  direction: Axis.horizontal,
+                  children: [
+                    Text(
+                      "Text Direction:",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    RadioListTile(
+                      title: Text("Left to Right"),
+                      groupValue: 2,
+                      value: TextDirection.ltr,
+                      selected: textDirection == TextDirection.ltr ? true : false,
+                      onChanged: (x) {
+                        setState(() {
+                          textDirection = x;
+                          print(textDirection);
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: Text("Right to Left"),
+                      groupValue: 2,
+                      value: TextDirection.rtl,
+                      selected: textDirection == TextDirection.rtl ? true : false,
+                      onChanged: (x) {
+                        setState(() {
+                          textDirection = x;
+                          print(textDirection);
                         });
                       },
                     ),
