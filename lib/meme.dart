@@ -6,14 +6,20 @@ import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:backdrop/backdrop.dart';
 import 'faza.dart';
+import 'memegen_bloc.dart';
 
 String ok = "";
+String IMAGE_TYPE;
 String topText = "";
 String bottomText = "";
+String memeTag = "";
 Io.File _image;
-GlobalKey _globalKey = new GlobalKey();
+String _imageNetwork;
+GlobalKey _globalKey = GlobalKey();
 TextAlign textAlign = TextAlign.left;
-TextDirection textDirection = TextDirection.ltr;
+TextDirection maintextDirection = TextDirection.ltr;
+TextDirection bottomtextDirection = TextDirection.ltr;
+TextDirection toptextDirection = TextDirection.ltr;
 FontWeight memeWeight = FontWeight.bold;
 FontWeight topmemeWeight = FontWeight.bold;
 FontWeight bottommemeWeight = FontWeight.bold;
@@ -26,12 +32,13 @@ double bottommemeSize = 5;
 
 class TheMemeClass extends StatefulWidget {
   @override
-  TheMemeState createState() => new TheMemeState();
+  TheMemeState createState() => TheMemeState();
 }
 
 class TheMemeState extends State<TheMemeClass> {
   @override
   void initState() {
+    super.initState();
     _image = null;
   }
 
@@ -40,6 +47,7 @@ class TheMemeState extends State<TheMemeClass> {
 
     setState(() {
       _image = image;
+      IMAGE_TYPE = 'FILE';
     });
   }
 
@@ -48,20 +56,21 @@ class TheMemeState extends State<TheMemeClass> {
 
     setState(() {
       _image = image;
+      IMAGE_TYPE = 'FILE';
     });
   }
 
   Widget build(BuildContext context) {
     print(MediaQuery.of(context).size.width);
-    Column meme = new Column(
+    Column meme = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         ok != ""
-            ? new Text(
+            ? Text(
                 ok,
                 maxLines: null,
                 textAlign: textAlign,
-                textDirection: textDirection,
+                textDirection: maintextDirection,
                 style: TextStyle(
                     fontSize: memeSize,
                     color: Colors.black,
@@ -69,26 +78,31 @@ class TheMemeState extends State<TheMemeClass> {
                     fontStyle: memeStyle),
               )
             : Container(),
-        _image == null
-            ? new Container()
-            : new Padding(
+        IMAGE_TYPE == null
+            ? Container()
+            : Padding(
                 padding: EdgeInsets.only(
                     left: 10.0, right: 10.0, bottom: 10.0, top: 20.0),
                 child: Stack(
                   alignment: Alignment.center,
                   children: <Widget>[
                     ClipRRect(
-                      child: new Image.file(
-                        _image,
-                        width: MediaQuery.of(context).size.width,
-                      ),
+                      child: IMAGE_TYPE == 'FILE'
+                          ? Image.file(
+                              _image,
+                              width: MediaQuery.of(context).size.width,
+                            )
+                          : Image.network(
+                              _imageNetwork,
+                              width: MediaQuery.of(context).size.width,
+                            ),
                       borderRadius: BorderRadius.circular(20.0),
                     ),
                     Positioned(
                       child: Text(
                         topText,
                         textAlign: TextAlign.center,
-                        textDirection: textDirection,
+                        textDirection: toptextDirection,
                         style: TextStyle(
                           color: Colors.white,
                           fontStyle: topmemeStyle,
@@ -121,7 +135,7 @@ class TheMemeState extends State<TheMemeClass> {
                       child: Text(
                         bottomText,
                         textAlign: TextAlign.center,
-                        textDirection: textDirection,
+                        textDirection: bottomtextDirection,
                         style: TextStyle(
                           color: Colors.white,
                           fontStyle: bottommemeStyle,
@@ -155,10 +169,10 @@ class TheMemeState extends State<TheMemeClass> {
               )
       ],
     );
-    SingleChildScrollView theMeme = new SingleChildScrollView(
+    SingleChildScrollView theMeme = SingleChildScrollView(
       child: Container(
         color: Colors.white,
-        child: new Padding(
+        child: Padding(
           padding: EdgeInsets.all(10.0),
           child: meme,
         ),
@@ -173,10 +187,10 @@ class MemeCreator extends StatelessWidget {
   final ThemeData theme;
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
+    return MaterialApp(
       title: 'Meme App',
       debugShowCheckedModeBanner: false,
-      home: new MyHomePage(title: 'Meme App'),
+      home: MyHomePage(title: 'Meme App'),
       theme: theme,
     );
   }
@@ -188,15 +202,18 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  MemegenBloc memegenBloc;
+  StreamBuilder<List<String>> memeStreamBuilder;
   Future getImageGallery() async {
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
 
     setState(() {
       _image = image;
+      IMAGE_TYPE = 'FILE';
     });
   }
 
@@ -205,16 +222,105 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       _image = image;
+      IMAGE_TYPE = 'FILE';
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    memegenBloc = MemegenBloc();
+    memeStreamBuilder = StreamBuilder<List<String>>(
+      stream: memegenBloc.memeStream,
+      initialData: [],
+      builder: (cont, snap) {
+        if (snap.hasError)
+          return Center(
+            child: Text("Error:${snap.error}"),
+          );
+        else if (snap.hasData) {
+          print(snap.data.toString());
+          return ListView.builder(
+            itemCount: snap.data.length >= 100 ? 101 : snap.data.length + 1,
+            itemBuilder: (cont, index) {
+              return index == 0
+                  ? Material(
+                      color: Colors.white,
+                      child: TextField(
+                        onChanged: (tag) {
+                          memeTag = tag;
+                          memegenBloc.sinkMemeTag(memeTag);
+                        },
+                      ),
+                    )
+                  : Container(
+                      color: Colors.white,
+                      padding: EdgeInsets.all(3),
+                      child: snap.data[index - 1] != 'error'
+                          ? Padding(
+                              padding: EdgeInsets.all(10),
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    IMAGE_TYPE = 'NETWORK';
+                                    _imageNetwork = snap.data[index - 1];
+                                    _image = null;
+                                    Navigator.of(context).pop();
+                                  });
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Image.network(
+                                    snap.data[index - 1],
+                                    fit: BoxFit.cover,
+                                    height: 100,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Material(
+                              child: Center(
+                                child: Text(
+                                  "ERROR",
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ),
+                            ));
+            },
+          );
+        }
+        return Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  void _alertDialog() {
+    memegenBloc.sinkMemeTag("");
+    showDialog(
+      context: context,
+      builder: (context) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            MediaQuery.of(context).size.width * .07,
+            MediaQuery.of(context).size.height * .07,
+            MediaQuery.of(context).size.width * .07,
+            MediaQuery.of(context).size.height * .07),
+        child: memeStreamBuilder,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return BackdropScaffold(
       actions: <Widget>[
-        new IconButton(
+        IconButton(
           tooltip: "Perview",
-          icon: new Icon(
+          icon: Icon(
             Icons.photo,
             color: Colors.white,
             size: 25.0,
@@ -226,10 +332,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   builder: (context) => SavePage(
                         memeText: ok,
                         topText: topText,
+                        topTextDirection:toptextDirection,
                         bottomText: bottomText,
-                        image: _image,
+                        bottomTextDirection: bottomtextDirection,
+                        imageFile: _image,
+                        imageNetwork: _imageNetwork,
+                        imageType: IMAGE_TYPE,
                         textAlign: textAlign,
-                        textDirection: textDirection,
+                        mainTextDirection: maintextDirection,
                         memeStyle: memeStyle,
                         topmemeStyle: topmemeStyle,
                         bottommemeStyle: bottommemeStyle,
@@ -253,20 +363,20 @@ class _MyHomePageState extends State<MyHomePage> {
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 color: Colors.grey[850],
-                child: new Center(
+                child: Center(
                   child: Padding(
                     padding: EdgeInsets.all(10),
-                    child: new Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        new FlatButton.icon(
-                          icon: new Icon(
+                        FlatButton.icon(
+                          icon: Icon(
                             Icons.add_to_photos,
                             color: Theme.of(context).accentColor,
                             size: 50.0,
                           ),
-                          label: new Text(
+                          label: Text(
                             "Pick a Photo",
                             style: TextStyle(
                               color: Colors.white,
@@ -276,14 +386,14 @@ class _MyHomePageState extends State<MyHomePage> {
                             getImageGallery();
                           },
                         ),
-                        new Padding(padding: EdgeInsets.only(top: 20.0)),
-                        new FlatButton.icon(
-                          icon: new Icon(
+                        Padding(padding: EdgeInsets.only(top: 20.0)),
+                        FlatButton.icon(
+                          icon: Icon(
                             Icons.add_a_photo,
                             color: Theme.of(context).accentColor,
                             size: 50.0,
                           ),
-                          label: new Text(
+                          label: Text(
                             "Snap a Photo",
                             style: TextStyle(
                               color: Colors.white,
@@ -293,14 +403,32 @@ class _MyHomePageState extends State<MyHomePage> {
                             getImageCamera();
                           },
                         ),
-                        new Padding(padding: EdgeInsets.only(top: 20.0)),
-                        new FlatButton.icon(
-                          icon: new Icon(
+                        Padding(padding: EdgeInsets.only(top: 20.0)),
+                        FlatButton.icon(
+                          icon: Icon(
+                            Icons.laptop_chromebook,
+                            color: Theme.of(context).accentColor,
+                            size: 50.0,
+                          ),
+                          label: Text(
+                            "Download a Photo",
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          onPressed: () {
+                            print("download meme");
+                            _alertDialog();
+                          },
+                        ),
+                        Padding(padding: EdgeInsets.only(top: 20.0)),
+                        FlatButton.icon(
+                          icon: Icon(
                             Icons.close,
                             color: Theme.of(context).accentColor,
                             size: 50.0,
                           ),
-                          label: new Text(
+                          label: Text(
                             "Delete the Photo",
                             style: TextStyle(
                               color: Colors.white,
@@ -309,6 +437,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () {
                             setState(() {
                               _image = null;
+                              _imageNetwork = null;
+                              IMAGE_TYPE = null;
                             });
                           },
                         )
@@ -337,7 +467,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
                       style: TextStyle(color: Colors.white),
-                      textDirection: textDirection,
+                      textDirection: maintextDirection,
                       enabled: true,
                       maxLines: null,
                       cursorColor: Colors.white,
@@ -357,7 +487,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
                       style: TextStyle(color: Colors.white),
-                      textDirection: textDirection,
+                      textDirection: toptextDirection,
                       enabled: true,
                       maxLines: null,
                       cursorColor: Colors.white,
@@ -378,7 +508,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
                       style: TextStyle(color: Colors.white),
-                      textDirection: textDirection,
+                      textDirection: bottomtextDirection,
                       enabled: true,
                       maxLines: null,
                       cursorColor: Colors.white,
@@ -713,18 +843,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   direction: Axis.horizontal,
                   children: [
                     Text(
-                      "Text Direction:",
+                      "Main Text Direction:",
                       style: TextStyle(color: Colors.white),
                     ),
                     RadioListTile(
                       title: Text("Left to Right"),
                       groupValue: 2,
                       value: TextDirection.ltr,
-                      selected: textDirection == TextDirection.ltr ? true : false,
+                      selected:
+                          maintextDirection == TextDirection.ltr ? true : false,
                       onChanged: (x) {
                         setState(() {
-                          textDirection = x;
-                          print(textDirection);
+                          maintextDirection = x;
+                          print(maintextDirection);
                         });
                       },
                     ),
@@ -732,11 +863,72 @@ class _MyHomePageState extends State<MyHomePage> {
                       title: Text("Right to Left"),
                       groupValue: 2,
                       value: TextDirection.rtl,
-                      selected: textDirection == TextDirection.rtl ? true : false,
+                      selected:
+                          maintextDirection == TextDirection.rtl ? true : false,
                       onChanged: (x) {
                         setState(() {
-                          textDirection = x;
-                          print(textDirection);
+                          maintextDirection = x;
+                          print(maintextDirection);
+                        });
+                      },
+                    ),
+                    Text(
+                      "Top Text Direction:",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    RadioListTile(
+                      title: Text("Left to Right"),
+                      groupValue: 2,
+                      value: TextDirection.ltr,
+                      selected:
+                          toptextDirection == TextDirection.ltr ? true : false,
+                      onChanged: (x) {
+                        setState(() {
+                          toptextDirection = x;
+                          print(toptextDirection);
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: Text("Right to Left"),
+                      groupValue: 2,
+                      value: TextDirection.rtl,
+                      selected:
+                          toptextDirection == TextDirection.rtl ? true : false,
+                      onChanged: (x) {
+                        setState(() {
+                          toptextDirection = x;
+                          print(toptextDirection);
+                        });
+                      },
+                    ),
+                    Text(
+                      "Bottom Text Direction:",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    RadioListTile(
+                      title: Text("Left to Right"),
+                      groupValue: 2,
+                      value: TextDirection.ltr,
+                      selected:
+                          bottomtextDirection == TextDirection.ltr ? true : false,
+                      onChanged: (x) {
+                        setState(() {
+                          bottomtextDirection = x;
+                          print(bottomtextDirection);
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: Text("Right to Left"),
+                      groupValue: 2,
+                      value: TextDirection.rtl,
+                      selected:
+                          bottomtextDirection == TextDirection.rtl ? true : false,
+                      onChanged: (x) {
+                        setState(() {
+                          bottomtextDirection = x;
+                          print(bottomtextDirection);
                         });
                       },
                     ),

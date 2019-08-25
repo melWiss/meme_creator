@@ -5,7 +5,6 @@ import 'dart:io' as Io;
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -20,10 +19,10 @@ Future<String> get _localPath async {
 }
 
 class SavePage extends StatelessWidget {
-  final String memeText, topText, bottomText;
-  final Io.File image;
+  final String memeText, topText, bottomText,imageType,imageNetwork;
+  final Io.File imageFile;
   final TextAlign textAlign;
-  final TextDirection textDirection;
+  final TextDirection mainTextDirection,topTextDirection, bottomTextDirection;
   final FontWeight memeWeight, topmemeWeight, bottommemeWeight;
   final FontStyle memeStyle, topmemeStyle, bottommemeStyle;
   final double memeSize, topmemeSize, bottommemeSize;
@@ -34,9 +33,13 @@ class SavePage extends StatelessWidget {
     this.memeSize,
     this.topmemeSize,
     this.bottommemeSize,
-    this.image,
+    this.imageType,
+    this.imageFile,
+    this.imageNetwork,
     this.textAlign,
-    this.textDirection,
+    this.mainTextDirection,
+    this.topTextDirection,
+    this.bottomTextDirection,
     this.memeStyle,
     this.topmemeStyle,
     this.bottommemeStyle,
@@ -46,11 +49,11 @@ class SavePage extends StatelessWidget {
   });
 
   Widget build(BuildContext context) {
-    var perview = new Container(
+    var perview =  Container(
         color: Colors.white,
-        child: new Padding(
+        child:  Padding(
           padding: EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 10),
-          child: new Column(
+          child:  Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               memeText != "" && memeText != " "
@@ -59,7 +62,7 @@ class SavePage extends StatelessWidget {
                     child: Text(
                       memeText,
                       textAlign: textAlign,
-                      textDirection: textDirection,
+                      textDirection: mainTextDirection,
                       style: TextStyle(
                           fontSize: memeSize,
                           color: Colors.black,
@@ -68,7 +71,7 @@ class SavePage extends StatelessWidget {
                     ),
                   )
                   : Container(),
-              image != null
+              imageType != null
                   ? Padding(
                       padding: EdgeInsets.only(
                           top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
@@ -76,8 +79,11 @@ class SavePage extends StatelessWidget {
                         alignment: Alignment.center,
                         children: <Widget>[
                           ClipRRect(
-                            child: new Image.file(
-                              image,
+                            child:  imageType == 'FILE'?Image.file(
+                              imageFile,
+                              width: MediaQuery.of(context).size.width,
+                            ):Image.network(
+                              imageNetwork,
                               width: MediaQuery.of(context).size.width,
                             ),
                             borderRadius: BorderRadius.circular(20.0),
@@ -86,7 +92,7 @@ class SavePage extends StatelessWidget {
                             child: Text(
                               topText,
                               textAlign: TextAlign.center,
-                              textDirection: textDirection,
+                              textDirection: topTextDirection,
                               style: TextStyle(
                                   color: Colors.white,
                                   fontStyle: topmemeStyle,
@@ -118,7 +124,7 @@ class SavePage extends StatelessWidget {
                             child: Text(
                               bottomText,
                               textAlign: TextAlign.center,
-                              textDirection: textDirection,
+                              textDirection: bottomTextDirection,
                               style: TextStyle(
                                   color: Colors.white,
                                   fontStyle: bottommemeStyle,
@@ -153,7 +159,7 @@ class SavePage extends StatelessWidget {
             ],
           ),
         ));
-    GlobalKey _globalKey = new GlobalKey();
+    GlobalKey _globalKey =  GlobalKey();
     /*Future<void> _capturePng() async {
       int i = 0;
       String pathMeme = await _localPath;
@@ -164,10 +170,10 @@ class SavePage extends StatelessWidget {
       ui.Image image = await boundary.toImage();
       ByteData byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
-      Io.File file = new Io.File(path + "meme" + i.toString() + ".jpg");
+      Io.File file =  Io.File(path + "meme" + i.toString() + ".jpg");
       while (await file.exists() == true) {
         i++;
-        file = new Io.File(path + "meme" + i.toString() + ".jpg");
+        file =  Io.File(path + "meme" + i.toString() + ".jpg");
       }
       file.create();
       print("Done Fetching");
@@ -243,10 +249,10 @@ class SavePage extends StatelessWidget {
       ui.Image image = await boundary.toImage(pixelRatio: 4);
       ByteData byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
-      Io.File file = new Io.File(path + "meme" + i.toString() + ".png");
+      Io.File file =  Io.File(path + "meme" + i.toString() + ".png");
       while (await file.exists() == true) {
         i++;
-        file = new Io.File(path + "meme" + i.toString() + ".png");
+        file =  Io.File(path + "meme" + i.toString() + ".png");
       }
       file.create();
       print("Done Fetching");
@@ -278,23 +284,23 @@ class SavePage extends StatelessWidget {
     }
     //----------------------------------------------------------------------
 
-    RepaintBoundary memePerview = new RepaintBoundary(
+    RepaintBoundary memePerview =  RepaintBoundary(
       key: _globalKey,
       child: perview,
     );
-    SingleChildScrollView finalMeme = new SingleChildScrollView(
+    SingleChildScrollView finalMeme =  SingleChildScrollView(
       child: memePerview,
     );
-    return new Scaffold(
+    return  Scaffold(
       appBar: AppBar(
         elevation: 0.0,
         centerTitle: true,
         title: Text("Save?",
             style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
         actions: <Widget>[
-          new IconButton(
+           IconButton(
             tooltip: "Save",
-            icon: new Icon(
+            icon:  Icon(
               Icons.save,
               color: Colors.white,
               size: 25.0,
